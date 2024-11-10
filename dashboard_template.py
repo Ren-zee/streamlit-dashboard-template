@@ -332,6 +332,7 @@ elif st.session_state.page_selection == "data_cleaning":
     st.code("""
 
     scaler = MinMaxScaler()
+    X_train_scaled = scaler.fit_transform(X_train_reg)
     phoneData_df[['product_price', 'product_star_rating']] = scaler.fit_transform(
     phoneData_df[['product_price', 'product_star_rating']])   
     
