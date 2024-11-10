@@ -410,23 +410,14 @@ elif st.session_state.page_selection == "data_cleaning":
 
 
 
-# Ensure session state variables are initialized
-if 'X_train_class' not in st.session_state:
-    st.session_state['X_train_class'] = None
-if 'X_test_class' not in st.session_state:
-    st.session_state['X_test_class'] = None
-if 'y_train_class' not in st.session_state:
-    st.session_state['y_train_class'] = None
-if 'y_test_class' not in st.session_state:
-    st.session_state['y_test_class'] = None
-if 'X_train_reg' not in st.session_state:
-    st.session_state['X_train_reg'] = None
-if 'X_test_reg' not in st.session_state:
-    st.session_state['X_test_reg'] = None
-if 'y_train_reg' not in st.session_state:
-    st.session_state['y_train_reg'] = None
-if 'y_test_reg' not in st.session_state:
-    st.session_state['y_test_reg'] = None
+# Initialize session state variables if not present
+session_state_keys = [
+    'X_train_class', 'X_test_class', 'y_train_class', 'y_test_class',
+    'X_train_reg', 'X_test_reg', 'y_train_reg', 'y_test_reg'
+]
+for key in session_state_keys:
+    if key not in st.session_state:
+        st.session_state[key] = None
 
 # Machine Learning Page
 if st.session_state.page_selection == "machine_learning":
@@ -481,8 +472,8 @@ if st.session_state.page_selection == "machine_learning":
             return value
 
         # Apply extract_numeric and fill NaN with median for y_train_reg and y_test_reg
-        y_train_reg = y_train_reg.apply(extract_numeric).fillna(y_train_reg.median())
-        y_test_reg = y_test_reg.apply(extract_numeric).fillna(y_test_reg.median())
+        y_train_reg = pd.to_numeric(y_train_reg, errors='coerce').fillna(y_train_reg.median())
+        y_test_reg = pd.to_numeric(y_test_reg, errors='coerce').fillna(y_test_reg.median())
 
         # Train Random Forest Regressor
         rfr_model = RandomForestRegressor(random_state=42)
@@ -509,7 +500,7 @@ if st.session_state.page_selection == "machine_learning":
 
         # Plot all trees up to 100 in a grid layout
         st.subheader("Random Forest Trees")
-        n_estimators = min(len(rfr_model.estimators_), 100)
+        n_estimators = st.slider("Number of Trees to Display", min_value=1, max_value=len(rfr_model.estimators_), value=10)
         n_rows = 10
         n_cols = 10
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 20), dpi=50)
