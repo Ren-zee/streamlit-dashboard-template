@@ -490,70 +490,69 @@ elif st.session_state.page_selection == "machine_learning":
     plot_confusion_matrix(y_test_class, y_pred_class, title="Logistic Regression Confusion Matrix")
 
  
+    # Function to extract numeric values from text-based sales volume
+    def extract_numeric(value):
+        if isinstance(value, str):
+            numbers = re.findall(r'\d+', value)
+            if numbers:
+                return int(numbers[0])
+            else:
+                return np.nan
+        return value
+    
+    # Clean the data (apply extract_numeric and fill NaNs with the median)
+    def clean_data(y_data):
+        y_data = y_data.apply(extract_numeric)
+        y_data = y_data.fillna(y_data.median())
+        return y_data
+    
+    # Streamlit UI
     st.subheader("Random Forest")
     st.markdown("""
-
     **Random Forest Regressor** is a machine learning algorithm that is used to predict continuous values by *combining multiple decision trees* which is called `"Forest"` wherein each tree is trained independently on different random subset of data and features.
-
-    This process begins with data **splitting** wherein the algorithm selects various random subsets of both the data points and the features to create diverse decision trees.  
-
-    Each tree is then trained separately to make predictions based on its unique subset. When it's time to make a final prediction each tree in the forest gives its own result and the Random Forest algorithm averages these predictions.
-
-    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html         
-                
-    """) 
     
-    # Access X and y data for Random Forest regression from session state
+    This process begins with data **splitting** wherein the algorithm selects various random subsets of both the data points and the features to create diverse decision trees.  
+    
+    Each tree is then trained separately to make predictions based on its unique subset. When it's time to make a final prediction each tree in the forest gives its own result and the Random Forest algorithm averages these predictions.
+    
+    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+    """)
+    
+    # Access training and testing data from session state
     X_train_reg = st.session_state['X_train_reg']
     X_test_reg = st.session_state['X_test_reg']
     y_train_reg = st.session_state['y_train_reg']
     y_test_reg = st.session_state['y_test_reg']
-
-
+    
+    # Clean the target variables (y_train_reg and y_test_reg)
+    y_train_reg = clean_data(y_train_reg)
+    y_test_reg = clean_data(y_test_reg)
+    
+    # Train the Random Forest Regressor model
     st.subheader("Training the Random Forest Regressor model")
-    rfr_model = RandomForestRegressor(random_state=42)  # Model definition
-    rfr_model.fit(X_train_reg, y_train_reg)
-    st.code("""
-
     rfr_model = RandomForestRegressor(random_state=42)
-    rfr_model.fit(X_train_reg, y_train_reg)   
-            
-    """)
-
-    st.subheader("Model Evaluation")
-
+    rfr_model.fit(X_train_reg, y_train_reg)
+    
     st.code("""
-    train_accuracy = rfr_model.score(X_train_reg, y_train_reg)  # Train data R^2 score
-    test_accuracy = rfr_model.score(X_test_reg, y_test_reg)    # Test data R^2 score
-    # Apply the extract_numeric function to clean y_test_reg
-    y_test_reg = y_test_reg.apply(extract_numeric)
-
-    # Fill any remaining NaN values in y_test_reg with the median
-    y_test_reg = y_test_reg.fillna(y_test_reg.median())
-
-    # Evaluate the model
-    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)  # Train data
-    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)      # Test data
-
-    print(f'Train R^2 Score: {train_accuracy_reg * 100:.2f}%')
-    print(f'Test R^2 Score: {test_accuracy_reg * 100:.2f}%')
-    
-            
+    rfr_model = RandomForestRegressor(random_state=42)
+    rfr_model.fit(X_train_reg, y_train_reg)
     """)
-    st.write('Train R\u00b2 Score: 85.13%')
-    st.write('Test R\u00b2 Score: 4.46%')
-
+    
+    # Model Evaluation
+    st.subheader("Model Evaluation")
+    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)
+    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)
+    
+    st.write(f'Train R\u00b2 Score: {train_accuracy_reg * 100:.2f}%')
+    st.write(f'Test R\u00b2 Score: {test_accuracy_reg * 100:.2f}%')
+    
     st.markdown("""
-
     The Random Forest Regressor was trained to predict sales volume. An R² score of X% indicates how well the model explains the variance in sales volume, suggesting that the features used are relevant predictors.
-     
     """)
-
-    # Feature Importance
-    feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
     
-    # Display Feature Importance
+    # Feature Importance
     st.subheader("Feature Importance")
+    feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
     st.bar_chart(feature_importance)
 
 
