@@ -560,51 +560,74 @@ elif st.session_state.page_selection == "machine_learning":
 
     
 # Prediction Page
-
 elif st.session_state.page_selection == "prediction":
     st.header("👀 Prediction")
 
-    # Show 5 sample rows for each category in "Amazon Choice" and "Best Seller"
-    amazon_choice_samples = phoneData_df[phoneData_df["is_amazon_choice"] == True].head(5)
-    best_seller_samples = phoneData_df[phoneData_df["is_best_seller"] == True].head(5)
-    not_amazon_choice_samples = phoneData_df[phoneData_df["is_amazon_choice"] == False].head(5)
+    st.subheader("Input Features for Prediction")
+    with st.form(key='prediction_form'):
+        product_price = st.number_input("Product Price", min_value=0.0)  # Input for Product Price
+        product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)  # Input for Star Rating
+        product_num_ratings = st.number_input("Number of Ratings", min_value=0)  # Input for Number of Ratings
+        submit_button = st.form_submit_button("Predict")
+        if submit_button:
+            # Prepare the input DataFrame
+            input_data = pd.DataFrame({
+                'product_price': [product_price],
+                'product_star_rating': [product_star_rating],
+                'product_num_ratings': [product_num_ratings]
+            })
+            
+            # Normalize using the same scaler used during processing
+            scaler = MinMaxScaler()
+            input_normalized = scaler.fit_transform(input_data)
+            # Prediction Using Logistic Regression
+            amazon_choice_prediction = log_reg_model.predict(input_normalized)
+            prediction_result = "Amazon Choice" if amazon_choice_prediction[0] == 1 else "Not Amazon Choice"
+            st.success(f"Prediction for Amazon Choice classification: **{prediction_result}**")
+    # Check if models exist in session state
+    if 'log_reg_model' not in st.session_state or 'rfr_model' not in st.session_state:
+        st.error("Please train the models in the Machine Learning section first!")
+    else:
+        st.subheader("Input Features for Prediction")
+        with st.form(key='prediction_form'):
+            product_price = st.number_input("Product Price", min_value=0.0)
+            product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)
+            product_num_ratings = st.number_input("Number of Ratings", min_value=0)
+            submit_button = st.form_submit_button("Predict")
+            if submit_button:
+                try:
+                    # Prepare the input DataFrame
+                    input_data = pd.DataFrame({
+                        'product_price': [product_price],
+                        'product_star_rating': [product_star_rating],
+                        'product_num_ratings': [product_num_ratings]
+                    })
+                    
+                    # Normalize the input data
+                    scaler = MinMaxScaler()
+                    input_normalized = scaler.fit_transform(input_data)
+                    # Make predictions
+                    amazon_choice_prediction = st.session_state['log_reg_model'].predict(input_normalized)
+                    sales_volume_prediction = st.session_state['rfr_model'].predict(input_normalized)
+                    # Display results
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric(
+                            label="Amazon Choice Prediction",
+                            value="Yes" if amazon_choice_prediction[0] == 1 else "No"
+                        )
+                    with col2:
+                        st.metric(
+                            label="Predicted Sales Volume",
+                            value=f"{int(sales_volume_prediction[0]):,}"
+                        )
+                except Exception as e:
+                    st.error(f"An error occurred during prediction: {str(e)}")
+                    st.error("Please make sure all input values are valid.")
 
-    # Display the samples in Streamlit
-    st.subheader("Sample Data")
-    st.write("Amazon Choice samples:")
-    st.write(amazon_choice_samples)
-    st.write("Best Seller samples:")
-    st.write(best_seller_samples)
-    st.write("Non-Amazon Choice samples:")
-    st.write(not_amazon_choice_samples)
-
-    # New Unseen Data for Prediction (creating sample data for testing)
-    unseen_data = {
-        "product_price": [250.0, 450.0, 150.0],
-        "product_star_rating": [4.2, 3.8, 4.5],
-        "product_num_ratings": [100, 300, 50]
-    }
-
-    # Convert the unseen data into a DataFrame for prediction
-    X_new = pd.DataFrame(unseen_data)
-
-    st.subheader("Unseen Data for Prediction")
-    st.write(X_new)
-
-    # Logistic Regression Prediction (for Amazon Choice classification)
-    X_new_array = X_new.values
-    log_reg_predictions = log_reg_model.predict(X_new_array)
-    
-    st.subheader("Logistic Regression Prediction (Amazon Choice Classification)")
-    st.write("Predictions (1 = Amazon Choice, 0 = Not Amazon Choice):")
-    st.write(log_reg_predictions)
-
-    # Random Forest Regressor Prediction (for Sales Volume)
-    rfr_predictions = rfr_model.predict(X_new)
-    
-    st.subheader("Random Forest Regressor Prediction (Sales Volume)")
-    st.write("Predicted Sales Volume:")
-    st.write(rfr_predictions)
+            # Sales Volume Prediction Using Random Forest
+            sales_volume_prediction = rfr_model.predict(input_normalized)
+            st.success(f"Predicted Sales Volume: **{sales_volume_prediction[0]}**")
 
 
 
