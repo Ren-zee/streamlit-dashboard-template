@@ -414,147 +414,137 @@ elif st.session_state.page_selection == "data_cleaning":
     st.session_state['y_train_reg'] = y_train_reg
     st.session_state['y_test_reg'] = y_test_reg
 
-# Machine Learning Page
-elif st.session_state.page_selection == "machine_learning":
-    st.header("🤖 Machine Learning")
+import streamlit as st
+import pandas as pd
+import numpy as np
+import re
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.tree import plot_tree
 
-    st.subheader("Logistic Regression")
-    st.markdown("""
+# Ensure required session state variables are initialized
+if 'X_train_class' not in st.session_state:
+    st.session_state['X_train_class'] = None
+if 'X_test_class' not in st.session_state:
+    st.session_state['X_test_class'] = None
+if 'y_train_class' not in st.session_state:
+    st.session_state['y_train_class'] = None
+if 'y_test_class' not in st.session_state:
+    st.session_state['y_test_class'] = None
+if 'X_train_reg' not in st.session_state:
+    st.session_state['X_train_reg'] = None
+if 'X_test_reg' not in st.session_state:
+    st.session_state['X_test_reg'] = None
+if 'y_train_reg' not in st.session_state:
+    st.session_state['y_train_reg'] = None
+if 'y_test_reg' not in st.session_state:
+    st.session_state['y_test_reg'] = None
 
-    **Logistic Regression** is a `statistical` method used for binary classification problems, where the goal is to predict the probability that a given input point belongs to a particular category. Unlike linear regression, which predicts continuous values, logistic regression uses the logistic function to model a binary outcome.
+# Page header
+st.header("🤖 Machine Learning")
 
-    The predicted probabilities are then converted into class labels (typically 0 or 1) by applying a threshold. Commonly, a threshold of 0.5 is used, where probabilities above this threshold are classified as 1 (positive class) and those below as 0 (negative class).
+# Logistic Regression Section
+st.subheader("Logistic Regression")
+st.markdown("""
+**Logistic Regression** is a statistical method used for binary classification problems, where the goal is to predict the probability that a given input point belongs to a particular category.
+`Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+""")
 
-   `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html     
-                
-    """)    
-    # Access X and y data from session state
+if None in (st.session_state['X_train_class'], st.session_state['X_test_class'],
+            st.session_state['y_train_class'], st.session_state['y_test_class']):
+    st.error("Please complete data preprocessing before accessing the Logistic Regression model.")
+else:
     X_train_class = st.session_state['X_train_class']
     X_test_class = st.session_state['X_test_class']
     y_train_class = st.session_state['y_train_class']
     y_test_class = st.session_state['y_test_class']
-    # Imputer for handling missing values
-    st.write("Handling missing values using median imputation...")
-    
-    imputer = SimpleImputer(strategy="median")
 
-    # Apply the imputer to X_train_class and X_test_class
-    X_train_class = imputer.fit_transform(X_train_class)
-    X_test_class = imputer.transform(X_test_class)
-    st.code("""
-
-    # Initialize the imputer to replace NaN values with the median of each column
-    imputer = SimpleImputer(strategy="median")
-
-    # Apply the imputer to X_train_class and X_test_class
-    X_train_class = imputer.fit_transform(X_train_class)
-    X_test_class = imputer.transform(X_test_class)        
-    """)
-    st.write("Imputation Complete!")
-       
-    st.subheader("Training the Logistic Regression model")
+    # Train Logistic Regression model
     log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
     log_reg_model.fit(X_train_class, y_train_class)
-    st.code("""
-
-    log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
-    log_reg_model.fit(X_train_class, y_train_class)     
-            
-    """)
-    st.subheader("Model Evaluation")
     y_pred_class = log_reg_model.predict(X_test_class)
-    accuracy_class = accuracy_score(y_test_class, y_pred_class)
-    st.code("""
 
-    y_pred_class = log_reg_model.predict(X_test_class)
-    accuracy_class = accuracy_score(y_test_class, y_pred_class)
-    print(f'Accuracy of Logistic Regression Classifier: {accuracy_class * 100:.2f}%')
-            
-    """)
+    # Evaluation metrics
+    st.write("Accuracy:", accuracy_score(y_test_class, y_pred_class))
+    st.text("Classification Report:\n" + classification_report(y_test_class, y_pred_class))
 
-    st.write("Accuracy: 98.95%")
-    
-    st.markdown("""
+# Random Forest Regressor Section
+st.subheader("Random Forest Regressor")
+st.markdown("""
+**Random Forest Regressor** is a machine learning algorithm used to predict continuous values by combining multiple decision trees.
+`Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+""")
 
-    This implements Logistic Regression for classification. It first imputes any remaining missing values in the training and test datasets using the median. The model is then fitted on the training data, predictions are made on the test set, and the accuracy of the model is calculated and printed.
-     
-    """)
-
-    st.subheader("Classification Report")
-    classification_report_text = classification_report(y_test_class, y_pred_class)
-   
-    # Display the classification report 
-    st.text(f"\nClassification Report:\n{classification_report_text}")
- 
-    # Confusion Matrix Visualization
-    plot_confusion_matrix(y_test_class, y_pred_class, title="Logistic Regression Confusion Matrix")
-
- 
-    st.subheader("Random Forest")
-    st.markdown("""
-
-    **Random Forest Regressor** is a machine learning algorithm that is used to predict continuous values by *combining multiple decision trees* which is called `"Forest"` wherein each tree is trained independently on different random subset of data and features.
-
-    This process begins with data **splitting** wherein the algorithm selects various random subsets of both the data points and the features to create diverse decision trees.  
-
-    Each tree is then trained separately to make predictions based on its unique subset. When it's time to make a final prediction each tree in the forest gives its own result and the Random Forest algorithm averages these predictions.
-
-    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html         
-                
-    """) 
-    
-    # Access X and y data for Random Forest regression from session state
+if None in (st.session_state['X_train_reg'], st.session_state['X_test_reg'],
+            st.session_state['y_train_reg'], st.session_state['y_test_reg']):
+    st.error("Please complete data preprocessing before accessing the Random Forest Regressor model.")
+else:
     X_train_reg = st.session_state['X_train_reg']
     X_test_reg = st.session_state['X_test_reg']
     y_train_reg = st.session_state['y_train_reg']
     y_test_reg = st.session_state['y_test_reg']
 
+    # Define function to extract numeric values from sales volume
+    def extract_numeric(value):
+        if isinstance(value, str):
+            numbers = re.findall(r'\d+', value)
+            return int(numbers[0]) if numbers else np.nan
+        return value
 
-    st.subheader("Training the Random Forest Regressor model")
-    rfr_model = RandomForestRegressor(random_state=42)  # Model definition
-    rfr_model.fit(X_train_reg, y_train_reg)
-    st.code("""
+    # Apply extract_numeric and fill NaN with median for y_train_reg and y_test_reg
+    y_train_reg = y_train_reg.apply(extract_numeric).fillna(y_train_reg.median())
+    y_test_reg = y_test_reg.apply(extract_numeric).fillna(y_test_reg.median())
 
+    # Train Random Forest Regressor
     rfr_model = RandomForestRegressor(random_state=42)
-    rfr_model.fit(X_train_reg, y_train_reg)   
-            
-    """)
+    rfr_model.fit(X_train_reg, y_train_reg)
 
-    st.subheader("Model Evaluation")
-
-    st.code("""
-    train_accuracy = rfr_model.score(X_train_reg, y_train_reg)  # Train data R^2 score
-    test_accuracy = rfr_model.score(X_test_reg, y_test_reg)    # Test data R^2 score
-    # Apply the extract_numeric function to clean y_test_reg
-    y_test_reg = y_test_reg.apply(extract_numeric)
-
-    # Fill any remaining NaN values in y_test_reg with the median
-    y_test_reg = y_test_reg.fillna(y_test_reg.median())
-
-    # Evaluate the model
-    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)  # Train data
-    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)      # Test data
-
-    print(f'Train R^2 Score: {train_accuracy_reg * 100:.2f}%')
-    print(f'Test R^2 Score: {test_accuracy_reg * 100:.2f}%')
-    
-            
-    """)
-    st.write('Train R\u00b2 Score: 85.13%')
-    st.write('Test R\u00b2 Score: 4.46%')
-
-    st.markdown("""
-
-    The Random Forest Regressor was trained to predict sales volume. An R² score of X% indicates how well the model explains the variance in sales volume, suggesting that the features used are relevant predictors.
-     
-    """)
+    # Evaluate model
+    train_score = rfr_model.score(X_train_reg, y_train_reg)
+    test_score = rfr_model.score(X_test_reg, y_test_reg)
+    st.write(f"Train R² Score: {train_score * 100:.2f}%")
+    st.write(f"Test R² Score: {test_score * 100:.2f}%")
 
     # Feature Importance
-    feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
-    
-    # Display Feature Importance
     st.subheader("Feature Importance")
-    st.bar_chart(feature_importance)
+    feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=feature_importance, y=feature_importance.index)
+    plt.title("Random Forest Regressor Feature Importance")
+    plt.xlabel("Importance Score")
+    plt.ylabel("Feature")
+    st.pyplot(plt)
+
+    # Display number of trees in the Random Forest
+    st.write(f"Number of trees made: {len(rfr_model.estimators_)}")
+
+    # Plot all trees up to 100 in a grid layout
+    st.subheader("Random Forest Trees")
+    n_estimators = min(len(rfr_model.estimators_), 100)
+    n_rows = 10
+    n_cols = 10
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 20), dpi=50)
+    for i, tree in enumerate(rfr_model.estimators_[:n_estimators]):
+        row = i // n_cols
+        col = i % n_cols
+        ax = axes[row, col]
+        plot_tree(tree, feature_names=X_train_reg.columns, filled=True, rounded=True, ax=ax)
+        ax.set_title(f"Tree {i+1}", fontsize=6)
+        ax.axis('off')
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    # Extract and plot a single tree
+    st.subheader("Single Tree Visualization")
+    single_tree = rfr_model.estimators_[0]
+    plt.figure(figsize=(20, 10))
+    plot_tree(single_tree, feature_names=X_train_reg.columns, filled=True, rounded=True)
+    st.pyplot(plt)
 
 
     
