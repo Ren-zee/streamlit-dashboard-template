@@ -332,7 +332,6 @@ elif st.session_state.page_selection == "data_cleaning":
     st.code("""
 
     scaler = MinMaxScaler()
-    X_train_scaled = scaler.fit_transform(X_train_reg)
     phoneData_df[['product_price', 'product_star_rating']] = scaler.fit_transform(
     phoneData_df[['product_price', 'product_star_rating']])   
     
@@ -572,53 +571,55 @@ elif st.session_state.page_selection == "prediction":
     if 'log_reg_model' not in st.session_state or 'rfr_model' not in st.session_state:
         st.error("Please train the models in the Machine Learning section first!")
         st.stop()  # Stop further execution if models are not found
-    else:
-        st.subheader("Input Features for Prediction")
-        
-        # Input form for prediction
-        with st.form(key='prediction_form'):
-            product_price = st.number_input("Product Price", min_value=0.0)  # Input for Product Price
-            product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)  # Input for Star Rating
-            product_num_ratings = st.number_input("Number of Ratings", min_value=0)  # Input for Number of Ratings
-            submit_button = st.form_submit_button("Predict")
 
-            if submit_button:
-                try:
-                    # Prepare the input DataFrame
-                    input_data = pd.DataFrame({
-                        'product_price': [product_price],
-                        'product_star_rating': [product_star_rating],
-                        'product_num_ratings': [product_num_ratings]
-                    })
+    # Check if scaler exists in session state
+    if 'scaler' not in st.session_state:
+        st.error("Scaler is not available. Please train the models first!")
+        st.stop()  # Stop further execution if scaler is not available
 
-                    # Normalize the input data using the same scaler as during training
-                    scaler = st.session_state.get('scaler')  # Use scaler from session state
-                    if scaler is None:
-                        st.error("Scaler is not available. Please train the model first!")
-                        st.stop()  # Stop further execution if scaler is not available
-                    
-                    input_normalized = scaler.transform(input_data)
+    st.subheader("Input Features for Prediction")
 
-                    # Make predictions using models stored in session state
-                    amazon_choice_prediction = st.session_state['log_reg_model'].predict(input_normalized)
-                    sales_volume_prediction = st.session_state['rfr_model'].predict(input_normalized)
+    # Input form for prediction
+    with st.form(key='prediction_form'):
+        product_price = st.number_input("Product Price", min_value=0.0)  # Input for Product Price
+        product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)  # Input for Star Rating
+        product_num_ratings = st.number_input("Number of Ratings", min_value=0)  # Input for Number of Ratings
+        submit_button = st.form_submit_button("Predict")
 
-                    # Display predictions
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric(
-                            label="Amazon Choice Prediction",
-                            value="Yes" if amazon_choice_prediction[0] == 1 else "No"
-                        )
-                    with col2:
-                        st.metric(
-                            label="Predicted Sales Volume",
-                            value=f"{int(sales_volume_prediction[0]):,}"
-                        )
+        if submit_button:
+            try:
+                # Prepare the input DataFrame
+                input_data = pd.DataFrame({
+                    'product_price': [product_price],
+                    'product_star_rating': [product_star_rating],
+                    'product_num_ratings': [product_num_ratings]
+                })
 
-                except Exception as e:
-                    st.error(f"An error occurred during prediction: {str(e)}")
-                    st.error("Please make sure all input values are valid.")
+                # Normalize the input data using the scaler from session state
+                scaler = st.session_state['scaler']  # Retrieve scaler from session state
+                input_normalized = scaler.transform(input_data)
+
+                # Make predictions using models stored in session state
+                amazon_choice_prediction = st.session_state['log_reg_model'].predict(input_normalized)
+                sales_volume_prediction = st.session_state['rfr_model'].predict(input_normalized)
+
+                # Display predictions
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric(
+                        label="Amazon Choice Prediction",
+                        value="Yes" if amazon_choice_prediction[0] == 1 else "No"
+                    )
+                with col2:
+                    st.metric(
+                        label="Predicted Sales Volume",
+                        value=f"{int(sales_volume_prediction[0]):,}"
+                    )
+
+            except Exception as e:
+                st.error(f"An error occurred during prediction: {str(e)}")
+                st.error("Please make sure all input values are valid.")
+
 
 
 
