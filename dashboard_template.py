@@ -563,37 +563,19 @@ elif st.session_state.page_selection == "machine_learning":
 elif st.session_state.page_selection == "prediction":
     st.header("👀 Prediction")
 
-    st.subheader("Input Features for Prediction")
-    with st.form(key='prediction_form'):
-        product_price = st.number_input("Product Price", min_value=0.0)  # Input for Product Price
-        product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)  # Input for Star Rating
-        product_num_ratings = st.number_input("Number of Ratings", min_value=0)  # Input for Number of Ratings
-        submit_button = st.form_submit_button("Predict")
-        if submit_button:
-            # Prepare the input DataFrame
-            input_data = pd.DataFrame({
-                'product_price': [product_price],
-                'product_star_rating': [product_star_rating],
-                'product_num_ratings': [product_num_ratings]
-            })
-            
-            # Normalize using the same scaler used during processing
-            scaler = MinMaxScaler()
-            input_normalized = scaler.fit_transform(input_data)
-            # Prediction Using Logistic Regression
-            amazon_choice_prediction = log_reg_model.predict(input_normalized)
-            prediction_result = "Amazon Choice" if amazon_choice_prediction[0] == 1 else "Not Amazon Choice"
-            st.success(f"Prediction for Amazon Choice classification: **{prediction_result}**")
     # Check if models exist in session state
     if 'log_reg_model' not in st.session_state or 'rfr_model' not in st.session_state:
         st.error("Please train the models in the Machine Learning section first!")
     else:
         st.subheader("Input Features for Prediction")
+        
+        # Input form for prediction
         with st.form(key='prediction_form'):
-            product_price = st.number_input("Product Price", min_value=0.0)
-            product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)
-            product_num_ratings = st.number_input("Number of Ratings", min_value=0)
+            product_price = st.number_input("Product Price", min_value=0.0)  # Input for Product Price
+            product_star_rating = st.number_input("Product Star Rating", min_value=0.0, max_value=5.0)  # Input for Star Rating
+            product_num_ratings = st.number_input("Number of Ratings", min_value=0)  # Input for Number of Ratings
             submit_button = st.form_submit_button("Predict")
+
             if submit_button:
                 try:
                     # Prepare the input DataFrame
@@ -602,14 +584,22 @@ elif st.session_state.page_selection == "prediction":
                         'product_star_rating': [product_star_rating],
                         'product_num_ratings': [product_num_ratings]
                     })
-                    
-                    # Normalize the input data
-                    scaler = MinMaxScaler()
-                    input_normalized = scaler.fit_transform(input_data)
+
+                    # Normalize the input data using the same scaler as during training
+                    scaler = st.session_state.get('scaler')  # Use scaler from session state
+                    if scaler is None:
+                        # If scaler doesn't exist in session state, create and fit a new one (for demonstration purposes)
+                        scaler = MinMaxScaler()
+                        st.session_state['scaler'] = scaler
+                        scaler.fit(input_data)
+
+                    input_normalized = scaler.transform(input_data)
+
                     # Make predictions
                     amazon_choice_prediction = st.session_state['log_reg_model'].predict(input_normalized)
                     sales_volume_prediction = st.session_state['rfr_model'].predict(input_normalized)
-                    # Display results
+
+                    # Display predictions
                     col1, col2 = st.columns(2)
                     with col1:
                         st.metric(
@@ -621,13 +611,11 @@ elif st.session_state.page_selection == "prediction":
                             label="Predicted Sales Volume",
                             value=f"{int(sales_volume_prediction[0]):,}"
                         )
+
                 except Exception as e:
                     st.error(f"An error occurred during prediction: {str(e)}")
                     st.error("Please make sure all input values are valid.")
 
-            # Sales Volume Prediction Using Random Forest
-            sales_volume_prediction = rfr_model.predict(input_normalized)
-            st.success(f"Predicted Sales Volume: **{sales_volume_prediction[0]}**")
 
 
 
