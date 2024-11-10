@@ -436,7 +436,7 @@ elif st.session_state.page_selection == "data_cleaning":
     
 # Machine Learning Page
 elif st.session_state.page_selection == "machine_learning":
-    st.header("🤖 Machine Learning"
+    st.header("🤖 Machine Learning")
     
     # Logistic Regression Section
     st.subheader("Logistic Regression")
