@@ -557,9 +557,6 @@ elif st.session_state.page_selection == "machine_learning":
     feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
     st.bar_chart(feature_importance)
 
-    st.session_state['log_reg_model'] = log_reg_model
-    st.session_state['rfr_model'] = rfr_model
-    st.session_state['scaler'] = scaler
 
 
     
