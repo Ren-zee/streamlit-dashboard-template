@@ -570,6 +570,7 @@ elif st.session_state.page_selection == "prediction":
     # Check if models exist in session state
     if 'log_reg_model' not in st.session_state or 'rfr_model' not in st.session_state:
         st.error("Please train the models in the Machine Learning section first!")
+        st.stop()  # Stop further execution if models are not found
     else:
         st.subheader("Input Features for Prediction")
         
@@ -593,7 +594,7 @@ elif st.session_state.page_selection == "prediction":
                     scaler = st.session_state.get('scaler')  # Use scaler from session state
                     if scaler is None:
                         st.error("Scaler is not available. Please train the model first!")
-                    return
+                        st.stop()  # Stop further execution if scaler is not available
                     
                     input_normalized = scaler.transform(input_data)
 
@@ -617,6 +618,7 @@ elif st.session_state.page_selection == "prediction":
                 except Exception as e:
                     st.error(f"An error occurred during prediction: {str(e)}")
                     st.error("Please make sure all input values are valid.")
+
 
 
 
