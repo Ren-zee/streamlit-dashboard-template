@@ -417,10 +417,22 @@ elif st.session_state.page_selection == "data_cleaning":
 
 
 # Ensure session state variables are initialized
-for var in ['X_train_class', 'X_test_class', 'y_train_class', 'y_test_class',
-            'X_train_reg', 'X_test_reg', 'y_train_reg', 'y_test_reg']:
-    if var not in st.session_state:
-        st.session_state[var] = None
+if 'X_train_class' not in st.session_state:
+    st.session_state['X_train_class'] = None
+if 'X_test_class' not in st.session_state:
+    st.session_state['X_test_class'] = None
+if 'y_train_class' not in st.session_state:
+    st.session_state['y_train_class'] = None
+if 'y_test_class' not in st.session_state:
+    st.session_state['y_test_class'] = None
+if 'X_train_reg' not in st.session_state:
+    st.session_state['X_train_reg'] = None
+if 'X_test_reg' not in st.session_state:
+    st.session_state['X_test_reg'] = None
+if 'y_train_reg' not in st.session_state:
+    st.session_state['y_train_reg'] = None
+if 'y_test_reg' not in st.session_state:
+    st.session_state['y_test_reg'] = None
 
 # Machine Learning Page
 if st.session_state.page_selection == "machine_learning":
@@ -501,18 +513,16 @@ if st.session_state.page_selection == "machine_learning":
         # Display number of trees in the Random Forest
         st.write(f"Number of trees made: {len(rfr_model.estimators_)}")
 
-        # Plot all trees up to a user-defined limit
+        # Plot all trees up to 100 in a grid layout
         st.subheader("Random Forest Trees")
-        max_trees = st.slider("Select the number of trees to display:", min_value=1, max_value=min(100, len(rfr_model.estimators_)), value=10)
-
-        n_rows = (max_trees + 9) // 10  # Calculate required rows based on selected number of trees
-        n_cols = 10 if max_trees > 10 else max_trees
-
+        n_estimators = min(len(rfr_model.estimators_), 100)
+        n_rows = 10
+        n_cols = 10
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 20), dpi=50)
-        for i, tree in enumerate(rfr_model.estimators_[:max_trees]):
+        for i, tree in enumerate(rfr_model.estimators_[:n_estimators]):
             row = i // n_cols
             col = i % n_cols
-            ax = axes[row, col] if n_rows > 1 else axes[col]  # Adjust indexing if single row
+            ax = axes[row, col]
             plot_tree(tree, feature_names=X_train_reg.columns, filled=True, rounded=True, ax=ax)
             ax.set_title(f"Tree {i+1}", fontsize=6)
             ax.axis('off')
