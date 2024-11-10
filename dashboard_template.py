@@ -557,6 +557,10 @@ elif st.session_state.page_selection == "machine_learning":
     feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
     st.bar_chart(feature_importance)
 
+    st.session_state['log_reg_model'] = log_reg_model
+    st.session_state['rfr_model'] = rfr_model
+    st.session_state['scaler'] = scaler
+
 
     
 # Prediction Page
@@ -588,14 +592,12 @@ elif st.session_state.page_selection == "prediction":
                     # Normalize the input data using the same scaler as during training
                     scaler = st.session_state.get('scaler')  # Use scaler from session state
                     if scaler is None:
-                        # If scaler doesn't exist in session state, create and fit a new one (for demonstration purposes)
-                        scaler = MinMaxScaler()
-                        st.session_state['scaler'] = scaler
-                        scaler.fit(input_data)
-
+                        st.error("Scaler is not available. Please train the model first!")
+                        return
+                    
                     input_normalized = scaler.transform(input_data)
 
-                    # Make predictions
+                    # Make predictions using models stored in session state
                     amazon_choice_prediction = st.session_state['log_reg_model'].predict(input_normalized)
                     sales_volume_prediction = st.session_state['rfr_model'].predict(input_normalized)
 
@@ -615,6 +617,8 @@ elif st.session_state.page_selection == "prediction":
                 except Exception as e:
                     st.error(f"An error occurred during prediction: {str(e)}")
                     st.error("Please make sure all input values are valid.")
+
+
 
 
 
