@@ -559,13 +559,54 @@ elif st.session_state.page_selection == "machine_learning":
 
 
     
-    
-
 # Prediction Page
+
 elif st.session_state.page_selection == "prediction":
     st.header("👀 Prediction")
 
-    # Your content for the PREDICTION page goes here
+    # Show 5 sample rows for each category in "Amazon Choice" and "Best Seller"
+    amazon_choice_samples = phoneData_df[phoneData_df["is_amazon_choice"] == True].head(5)
+    best_seller_samples = phoneData_df[phoneData_df["is_best_seller"] == True].head(5)
+    not_amazon_choice_samples = phoneData_df[phoneData_df["is_amazon_choice"] == False].head(5)
+
+    # Display the samples in Streamlit
+    st.subheader("Sample Data")
+    st.write("Amazon Choice samples:")
+    st.write(amazon_choice_samples)
+    st.write("Best Seller samples:")
+    st.write(best_seller_samples)
+    st.write("Non-Amazon Choice samples:")
+    st.write(not_amazon_choice_samples)
+
+    # New Unseen Data for Prediction (creating sample data for testing)
+    unseen_data = {
+        "product_price": [250.0, 450.0, 150.0],
+        "product_star_rating": [4.2, 3.8, 4.5],
+        "product_num_ratings": [100, 300, 50]
+    }
+
+    # Convert the unseen data into a DataFrame for prediction
+    X_new = pd.DataFrame(unseen_data)
+
+    st.subheader("Unseen Data for Prediction")
+    st.write(X_new)
+
+    # Logistic Regression Prediction (for Amazon Choice classification)
+    X_new_array = X_new.values
+    log_reg_predictions = log_reg_model.predict(X_new_array)
+    
+    st.subheader("Logistic Regression Prediction (Amazon Choice Classification)")
+    st.write("Predictions (1 = Amazon Choice, 0 = Not Amazon Choice):")
+    st.write(log_reg_predictions)
+
+    # Random Forest Regressor Prediction (for Sales Volume)
+    rfr_predictions = rfr_model.predict(X_new)
+    
+    st.subheader("Random Forest Regressor Prediction (Sales Volume)")
+    st.write("Predicted Sales Volume:")
+    st.write(rfr_predictions)
+
+
 
 # Conclusions Page
 elif st.session_state.page_selection == "conclusion":
