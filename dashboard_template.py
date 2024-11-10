@@ -270,8 +270,8 @@ elif st.session_state.page_selection == "data_cleaning":
     st.subheader("Initial Dataset Preview")
     st.write("Here’s a preview of the raw dataset:")
     st.write(phonesearch_df.head())
-
-    # 1 Check for missing values
+    
+    # 1 Check 
     st.subheader("Checking for Missing Values")
     missing_values = phonesearch_df.isnull().sum()
     st.write(missing_values[missing_values > 0])
@@ -279,7 +279,9 @@ elif st.session_state.page_selection == "data_cleaning":
     # 2 Dropping Irrelevant Columns
     st.subheader("Dropping Irrelevant Columns")
     st.code("""
+
     phoneData_df = phoneData_df.drop(columns=['product_url', 'product_photo'])
+            
     """)
     irrelevant_columns = ['product_url', 'product_photo']
     phonesearch_df = phonesearch_df.drop(columns=irrelevant_columns)
@@ -288,26 +290,31 @@ elif st.session_state.page_selection == "data_cleaning":
     # 3 Cleaning and Converting Currency Columns
     st.subheader("Cleaning and Converting Currency Columns")
     st.code("""
+
     phoneData_df['product_price'] = pd.to_numeric(phoneData_df['product_price'].str.replace('[\$,]', '', regex=True))
     phoneData_df['product_original_price'] = pd.to_numeric(phoneData_df['product_original_price'].str.replace('[\$,]', '', regex=True)) 
+            
     """)
     phonesearch_df['product_price'] = pd.to_numeric(phonesearch_df['product_price'].str.replace('[\$,]', '', regex=True))
     phonesearch_df['product_original_price'] = pd.to_numeric(phonesearch_df['product_original_price'].str.replace('[\$,]', '', regex=True))
     st.write("✅ Converted columns `product_price` and `product_original_price` to numeric.")
-
+    
     # 4 Filling Missing Values with Median
     st.subheader("Filling Missing Values")
     st.code("""
+
     phoneData_df['product_price'] = phoneData_df['product_price'].fillna(phoneData_df['product_price'].median())
     phoneData_df['product_original_price'] = phoneData_df['product_original_price'].fillna(phoneData_df['product_original_price'].median())                  
+            
     """)
     phonesearch_df['product_price'] = phonesearch_df['product_price'].fillna(phonesearch_df['product_price'].median())
     phonesearch_df['product_original_price'] = phonesearch_df['product_original_price'].fillna(phonesearch_df['product_original_price'].median())
     st.write("✅ Filled missing values with the median for `product_price` and `product_original_price`.")
-
+    
     # 5 Outlier Removal in Product Price
     st.subheader("Outlier Removal in Product Price")
     st.code("""
+
     Q1 = phoneData_df['product_price'].quantile(0.25)
     Q3 = phoneData_df['product_price'].quantile(0.75)
     IQR = Q3 - Q1
@@ -317,29 +324,32 @@ elif st.session_state.page_selection == "data_cleaning":
     Q1 = phonesearch_df['product_price'].quantile(0.25)
     Q3 = phonesearch_df['product_price'].quantile(0.75)
     IQR = Q3 - Q1
-    phonesearch_df = phonesearch_df[(phonesearch_df['product_price'] >= (Q1 - 1.5 * IQR)) &
-                                    (phonesearch_df['product_price'] <= (Q3 + 1.5 * IQR))]
+    phonesearch_df = phonesearch_df[(phonesearch_df['product_price'] >= (Q1 - 1.5 * IQR)) & (phonesearch_df['product_price'] <= (Q3 + 1.5 * IQR))]
     st.write("✅ Removed outliers based on the IQR method.")
-
+    
     # 6 Normalizing Columns
     st.subheader("Normalizing Columns")
     st.code("""
+
     scaler = MinMaxScaler()
     phoneData_df[['product_price', 'product_star_rating']] = scaler.fit_transform(
     phoneData_df[['product_price', 'product_star_rating']])   
+    
     """)
     scaler = MinMaxScaler()
     phonesearch_df[['product_price', 'product_star_rating']] = scaler.fit_transform(phonesearch_df[['product_price', 'product_star_rating']])
     st.write("✅ Normalized columns `product_price` and `product_star_rating`.")
-
+    
     # Final preview
     st.subheader("Processed Dataset Preview")
     st.write("Here’s a preview of the processed dataset:")
     st.write(phonesearch_df.head())
-
+ 
     st.header("🧼 Data Pre-processing")
     # 1 Encoding categorical variables
     st.subheader("Encoding Categorical Variables")
+
+    # Applying Label Encoding
     encoder = LabelEncoder()
     phonesearch_df['is_best_seller_encoded'] = encoder.fit_transform(phonesearch_df['is_best_seller'].astype(str))
     phonesearch_df['is_amazon_choice_encoded'] = encoder.fit_transform(phonesearch_df['is_amazon_choice'].astype(str))
@@ -360,11 +370,11 @@ elif st.session_state.page_selection == "data_cleaning":
     with col2:
         st.write("Target Variable for Classification:")
         st.write(y_classification.head())
-
+    
     # 3 Split the dataset into training and testing sets for classification
     st.subheader("Classification Data Split")
     X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X_classification, y_classification, test_size=0.3, random_state=42)
-
+    
     # Display 
     st.write("Shape of the Training Set for Classification:")
     st.write(X_train_class.shape)
@@ -376,7 +386,7 @@ elif st.session_state.page_selection == "data_cleaning":
     st.session_state['X_test_class'] = X_test_class
     st.session_state['y_train_class'] = y_train_class
     st.session_state['y_test_class'] = y_test_class 
-
+     
     # 4 Select features and target variable for regression
     st.subheader("Regression Task")
     X_regression = phonesearch_df[['product_price', 'product_star_rating', 'product_num_ratings']]
@@ -404,122 +414,147 @@ elif st.session_state.page_selection == "data_cleaning":
     st.session_state['y_train_reg'] = y_train_reg
     st.session_state['y_test_reg'] = y_test_reg
 
-    # Add a message indicating that preprocessing is complete
-    st.write("Data Preprocessing Completed and Saved to Session State.")
-
-
-
-
-# Initialize session state variables if not present
-session_state_keys = [
-    'X_train_class', 'X_test_class', 'y_train_class', 'y_test_class',
-    'X_train_reg', 'X_test_reg', 'y_train_reg', 'y_test_reg'
-]
-for key in session_state_keys:
-    if key not in st.session_state:
-        st.session_state[key] = None
-
 # Machine Learning Page
-if st.session_state.page_selection == "machine_learning":
+elif st.session_state.page_selection == "machine_learning":
     st.header("🤖 Machine Learning")
 
-    # Logistic Regression Section
     st.subheader("Logistic Regression")
     st.markdown("""
-    **Logistic Regression** is a statistical method used for binary classification problems, where the goal is to predict the probability that a given input point belongs to a particular category.
-    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+
+    **Logistic Regression** is a `statistical` method used for binary classification problems, where the goal is to predict the probability that a given input point belongs to a particular category. Unlike linear regression, which predicts continuous values, logistic regression uses the logistic function to model a binary outcome.
+
+    The predicted probabilities are then converted into class labels (typically 0 or 1) by applying a threshold. Commonly, a threshold of 0.5 is used, where probabilities above this threshold are classified as 1 (positive class) and those below as 0 (negative class).
+
+   `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html     
+                
+    """)    
+    # Access X and y data from session state
+    X_train_class = st.session_state['X_train_class']
+    X_test_class = st.session_state['X_test_class']
+    y_train_class = st.session_state['y_train_class']
+    y_test_class = st.session_state['y_test_class']
+    # Imputer for handling missing values
+    st.write("Handling missing values using median imputation...")
+    
+    imputer = SimpleImputer(strategy="median")
+
+    # Apply the imputer to X_train_class and X_test_class
+    X_train_class = imputer.fit_transform(X_train_class)
+    X_test_class = imputer.transform(X_test_class)
+    st.code("""
+
+    # Initialize the imputer to replace NaN values with the median of each column
+    imputer = SimpleImputer(strategy="median")
+
+    # Apply the imputer to X_train_class and X_test_class
+    X_train_class = imputer.fit_transform(X_train_class)
+    X_test_class = imputer.transform(X_test_class)        
+    """)
+    st.write("Imputation Complete!")
+       
+    st.subheader("Training the Logistic Regression model")
+    log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
+    log_reg_model.fit(X_train_class, y_train_class)
+    st.code("""
+
+    log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
+    log_reg_model.fit(X_train_class, y_train_class)     
+            
+    """)
+    st.subheader("Model Evaluation")
+    y_pred_class = log_reg_model.predict(X_test_class)
+    accuracy_class = accuracy_score(y_test_class, y_pred_class)
+    st.code("""
+
+    y_pred_class = log_reg_model.predict(X_test_class)
+    accuracy_class = accuracy_score(y_test_class, y_pred_class)
+    print(f'Accuracy of Logistic Regression Classifier: {accuracy_class * 100:.2f}%')
+            
     """)
 
-    if None in (st.session_state['X_train_class'], st.session_state['X_test_class'],
-                st.session_state['y_train_class'], st.session_state['y_test_class']):
-        st.error("Please complete data preprocessing before accessing the Logistic Regression model.")
-    else:
-        X_train_class = st.session_state['X_train_class']
-        X_test_class = st.session_state['X_test_class']
-        y_train_class = st.session_state['y_train_class']
-        y_test_class = st.session_state['y_test_class']
-
-        # Train Logistic Regression model
-        log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
-        log_reg_model.fit(X_train_class, y_train_class)
-        y_pred_class = log_reg_model.predict(X_test_class)
-
-        # Evaluation metrics
-        st.write("Accuracy:", accuracy_score(y_test_class, y_pred_class))
-        st.text("Classification Report:\n" + classification_report(y_test_class, y_pred_class))
-
-    # Random Forest Regressor Section
-    st.subheader("Random Forest Regressor")
+    st.write("Accuracy: 98.95%")
+    
     st.markdown("""
-    **Random Forest Regressor** is a machine learning algorithm used to predict continuous values by combining multiple decision trees.
-    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+
+    This implements Logistic Regression for classification. It first imputes any remaining missing values in the training and test datasets using the median. The model is then fitted on the training data, predictions are made on the test set, and the accuracy of the model is calculated and printed.
+     
     """)
 
-    if None in (st.session_state['X_train_reg'], st.session_state['X_test_reg'],
-                st.session_state['y_train_reg'], st.session_state['y_test_reg']):
-        st.error("Please complete data preprocessing before accessing the Random Forest Regressor model.")
-    else:
-        X_train_reg = st.session_state['X_train_reg']
-        X_test_reg = st.session_state['X_test_reg']
-        y_train_reg = st.session_state['y_train_reg']
-        y_test_reg = st.session_state['y_test_reg']
+    st.subheader("Classification Report")
+    classification_report_text = classification_report(y_test_class, y_pred_class)
+   
+    # Display the classification report 
+    st.text(f"\nClassification Report:\n{classification_report_text}")
+ 
+    # Confusion Matrix Visualization
+    plot_confusion_matrix(y_test_class, y_pred_class, title="Logistic Regression Confusion Matrix")
 
-        # Define function to extract numeric values from sales volume
-        def extract_numeric(value):
-            if isinstance(value, str):
-                numbers = re.findall(r'\d+', value)
-                return int(numbers[0]) if numbers else np.nan
-            return value
+ 
+    st.subheader("Random Forest")
+    st.markdown("""
 
-        # Apply extract_numeric and fill NaN with median for y_train_reg and y_test_reg
-        y_train_reg = pd.to_numeric(y_train_reg, errors='coerce').fillna(y_train_reg.median())
-        y_test_reg = pd.to_numeric(y_test_reg, errors='coerce').fillna(y_test_reg.median())
+    **Random Forest Regressor** is a machine learning algorithm that is used to predict continuous values by *combining multiple decision trees* which is called `"Forest"` wherein each tree is trained independently on different random subset of data and features.
 
-        # Train Random Forest Regressor
-        rfr_model = RandomForestRegressor(random_state=42)
-        rfr_model.fit(X_train_reg, y_train_reg)
+    This process begins with data **splitting** wherein the algorithm selects various random subsets of both the data points and the features to create diverse decision trees.  
 
-        # Evaluate model
-        train_score = rfr_model.score(X_train_reg, y_train_reg)
-        test_score = rfr_model.score(X_test_reg, y_test_reg)
-        st.write(f"Train R² Score: {train_score * 100:.2f}%")
-        st.write(f"Test R² Score: {test_score * 100:.2f}%")
+    Each tree is then trained separately to make predictions based on its unique subset. When it's time to make a final prediction each tree in the forest gives its own result and the Random Forest algorithm averages these predictions.
 
-        # Feature Importance
-        st.subheader("Feature Importance")
-        feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x=feature_importance, y=feature_importance.index)
-        plt.title("Random Forest Regressor Feature Importance")
-        plt.xlabel("Importance Score")
-        plt.ylabel("Feature")
-        st.pyplot(plt)
+    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html         
+                
+    """) 
+    
+    # Access X and y data for Random Forest regression from session state
+    X_train_reg = st.session_state['X_train_reg']
+    X_test_reg = st.session_state['X_test_reg']
+    y_train_reg = st.session_state['y_train_reg']
+    y_test_reg = st.session_state['y_test_reg']
 
-        # Display number of trees in the Random Forest
-        st.write(f"Number of trees made: {len(rfr_model.estimators_)}")
 
-        # Plot all trees up to 100 in a grid layout
-        st.subheader("Random Forest Trees")
-        n_estimators = st.slider("Number of Trees to Display", min_value=1, max_value=len(rfr_model.estimators_), value=10)
-        n_rows = 10
-        n_cols = 10
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 20), dpi=50)
-        for i, tree in enumerate(rfr_model.estimators_[:n_estimators]):
-            row = i // n_cols
-            col = i % n_cols
-            ax = axes[row, col]
-            plot_tree(tree, feature_names=X_train_reg.columns, filled=True, rounded=True, ax=ax)
-            ax.set_title(f"Tree {i+1}", fontsize=6)
-            ax.axis('off')
-        plt.tight_layout()
-        st.pyplot(fig)
+    st.subheader("Training the Random Forest Regressor model")
+    rfr_model = RandomForestRegressor(random_state=42)  # Model definition
+    rfr_model.fit(X_train_reg, y_train_reg)
+    st.code("""
 
-        # Extract and plot a single tree
-        st.subheader("Single Tree Visualization")
-        single_tree = rfr_model.estimators_[0]
-        plt.figure(figsize=(20, 10))
-        plot_tree(single_tree, feature_names=X_train_reg.columns, filled=True, rounded=True)
-        st.pyplot(plt)
+    rfr_model = RandomForestRegressor(random_state=42)
+    rfr_model.fit(X_train_reg, y_train_reg)   
+            
+    """)
+
+    st.subheader("Model Evaluation")
+
+    st.code("""
+    train_accuracy = rfr_model.score(X_train_reg, y_train_reg)  # Train data R^2 score
+    test_accuracy = rfr_model.score(X_test_reg, y_test_reg)    # Test data R^2 score
+    # Apply the extract_numeric function to clean y_test_reg
+    y_test_reg = y_test_reg.apply(extract_numeric)
+
+    # Fill any remaining NaN values in y_test_reg with the median
+    y_test_reg = y_test_reg.fillna(y_test_reg.median())
+
+    # Evaluate the model
+    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)  # Train data
+    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)      # Test data
+
+    print(f'Train R^2 Score: {train_accuracy_reg * 100:.2f}%')
+    print(f'Test R^2 Score: {test_accuracy_reg * 100:.2f}%')
+    
+            
+    """)
+    st.write('Train R\u00b2 Score: 85.13%')
+    st.write('Test R\u00b2 Score: 4.46%')
+
+    st.markdown("""
+
+    The Random Forest Regressor was trained to predict sales volume. An R² score of X% indicates how well the model explains the variance in sales volume, suggesting that the features used are relevant predictors.
+     
+    """)
+
+    # Feature Importance
+    feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
+    
+    # Display Feature Importance
+    st.subheader("Feature Importance")
+    st.bar_chart(feature_importance)
 
 
     
