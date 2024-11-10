@@ -506,57 +506,62 @@ elif st.session_state.page_selection == "machine_learning":
         y_data = y_data.fillna(y_data.median())
         return y_data
     
-    # Streamlit UI
-    st.subheader("Random Forest")
-    st.markdown("""
-    **Random Forest Regressor** is a machine learning algorithm that is used to predict continuous values by *combining multiple decision trees* which is called `"Forest"` wherein each tree is trained independently on different random subset of data and features.
+    st.subheader("Random Forest Regressor")
     
-    This process begins with data **splitting** wherein the algorithm selects various random subsets of both the data points and the features to create diverse decision trees.  
-    
-    Each tree is then trained separately to make predictions based on its unique subset. When it's time to make a final prediction each tree in the forest gives its own result and the Random Forest algorithm averages these predictions.
-    
-    `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
-    """)
-    
-    # Access training and testing data from session state
-    X_train_reg = st.session_state['X_train_reg']
-    X_test_reg = st.session_state['X_test_reg']
-    y_train_reg = st.session_state['y_train_reg']
-    y_test_reg = st.session_state['y_test_reg']
-    
-    # Clean the target variables (y_train_reg and y_test_reg)
-    y_train_reg = clean_data(y_train_reg)
-    y_test_reg = clean_data(y_test_reg)
-    
-    # Train the Random Forest Regressor model
-    st.subheader("Training the Random Forest Regressor model")
+    # Model definition and fitting
     rfr_model = RandomForestRegressor(random_state=42)
     rfr_model.fit(X_train_reg, y_train_reg)
     
-    st.code("""
-    rfr_model = RandomForestRegressor(random_state=42)
-    rfr_model.fit(X_train_reg, y_train_reg)
-    """)
+    # Evaluate the model
+    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)  # Train data
+    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)      # Test data
     
-    # Model Evaluation
-    st.subheader("Model Evaluation")
-    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)
-    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)
-    
-    st.write(f'Train R\u00b2 Score: {train_accuracy_reg * 100:.2f}%')
-    st.write(f'Test R\u00b2 Score: {test_accuracy_reg * 100:.2f}%')
-    
-    st.markdown("""
-    The Random Forest Regressor was trained to predict sales volume. An R² score of X% indicates how well the model explains the variance in sales volume, suggesting that the features used are relevant predictors.
-    """)
+    st.write(f"Train R² Score: {train_accuracy_reg * 100:.2f}%")
+    st.write(f"Test R² Score: {test_accuracy_reg * 100:.2f}%")
     
     # Feature Importance
-    st.subheader("Feature Importance")
     feature_importance = pd.Series(rfr_model.feature_importances_, index=X_train_reg.columns)
-    st.bar_chart(feature_importance)
-
-
     
+    # Display Feature Importance Barplot
+    st.subheader("Feature Importance")
+    st.bar_chart(feature_importance)
+    
+    # Plotting the Feature Importance with Seaborn (for better visualization)
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=feature_importance, y=feature_importance.index)
+    plt.title("Random Forest Regressor Feature Importance")
+    plt.xlabel("Importance Score")
+    plt.ylabel("Feature")
+    st.pyplot(plt)
+    
+    # Show decision trees
+    st.subheader("Visualizing Decision Trees")
+    
+    # Create a temporary directory to save the plots
+    temp_dir = tempfile.mkdtemp()
+    
+    # Set up the dimensions for the plot grid (e.g., 5x5 grid for 25 trees)
+    n_estimators = min(len(rfr_model.estimators_), 25)  # limit to 25 trees if there are more
+    
+    for i, tree in enumerate(rfr_model.estimators_[:n_estimators]):
+        fig, ax = plt.subplots(figsize=(15, 10))
+        plot_tree(tree, feature_names=X_train_reg.columns, filled=True, rounded=True, ax=ax)
+        ax.set_title(f"Tree {i+1}", fontsize=16)
+        ax.axis('off')  # Turn off axis to reduce clutter
+    
+        # Save each tree plot as an image
+        tree_image_path = os.path.join(temp_dir, f"tree_{i+1}.png")
+        fig.savefig(tree_image_path)
+        plt.close(fig)  # Close the figure to avoid memory issues
+    
+        # Display each tree plot in Streamlit
+        st.image(tree_image_path, caption=f"Tree {i+1}", use_column_width=True)
+    
+    # Clean up temporary directory after displaying the trees
+    import shutil
+    shutil.rmtree(temp_dir)
+
+
     
     
 
