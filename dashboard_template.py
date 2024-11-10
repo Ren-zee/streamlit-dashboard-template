@@ -270,8 +270,8 @@ elif st.session_state.page_selection == "data_cleaning":
     st.subheader("Initial Dataset Preview")
     st.write("Here’s a preview of the raw dataset:")
     st.write(phonesearch_df.head())
-    
-    # 1 Check 
+
+    # 1 Check for missing values
     st.subheader("Checking for Missing Values")
     missing_values = phonesearch_df.isnull().sum()
     st.write(missing_values[missing_values > 0])
@@ -279,9 +279,7 @@ elif st.session_state.page_selection == "data_cleaning":
     # 2 Dropping Irrelevant Columns
     st.subheader("Dropping Irrelevant Columns")
     st.code("""
-
     phoneData_df = phoneData_df.drop(columns=['product_url', 'product_photo'])
-            
     """)
     irrelevant_columns = ['product_url', 'product_photo']
     phonesearch_df = phonesearch_df.drop(columns=irrelevant_columns)
@@ -290,31 +288,26 @@ elif st.session_state.page_selection == "data_cleaning":
     # 3 Cleaning and Converting Currency Columns
     st.subheader("Cleaning and Converting Currency Columns")
     st.code("""
-
     phoneData_df['product_price'] = pd.to_numeric(phoneData_df['product_price'].str.replace('[\$,]', '', regex=True))
     phoneData_df['product_original_price'] = pd.to_numeric(phoneData_df['product_original_price'].str.replace('[\$,]', '', regex=True)) 
-            
     """)
     phonesearch_df['product_price'] = pd.to_numeric(phonesearch_df['product_price'].str.replace('[\$,]', '', regex=True))
     phonesearch_df['product_original_price'] = pd.to_numeric(phonesearch_df['product_original_price'].str.replace('[\$,]', '', regex=True))
     st.write("✅ Converted columns `product_price` and `product_original_price` to numeric.")
-    
+
     # 4 Filling Missing Values with Median
     st.subheader("Filling Missing Values")
     st.code("""
-
     phoneData_df['product_price'] = phoneData_df['product_price'].fillna(phoneData_df['product_price'].median())
     phoneData_df['product_original_price'] = phoneData_df['product_original_price'].fillna(phoneData_df['product_original_price'].median())                  
-            
     """)
     phonesearch_df['product_price'] = phonesearch_df['product_price'].fillna(phonesearch_df['product_price'].median())
     phonesearch_df['product_original_price'] = phonesearch_df['product_original_price'].fillna(phonesearch_df['product_original_price'].median())
     st.write("✅ Filled missing values with the median for `product_price` and `product_original_price`.")
-    
+
     # 5 Outlier Removal in Product Price
     st.subheader("Outlier Removal in Product Price")
     st.code("""
-
     Q1 = phoneData_df['product_price'].quantile(0.25)
     Q3 = phoneData_df['product_price'].quantile(0.75)
     IQR = Q3 - Q1
@@ -324,32 +317,29 @@ elif st.session_state.page_selection == "data_cleaning":
     Q1 = phonesearch_df['product_price'].quantile(0.25)
     Q3 = phonesearch_df['product_price'].quantile(0.75)
     IQR = Q3 - Q1
-    phonesearch_df = phonesearch_df[(phonesearch_df['product_price'] >= (Q1 - 1.5 * IQR)) & (phonesearch_df['product_price'] <= (Q3 + 1.5 * IQR))]
+    phonesearch_df = phonesearch_df[(phonesearch_df['product_price'] >= (Q1 - 1.5 * IQR)) &
+                                    (phonesearch_df['product_price'] <= (Q3 + 1.5 * IQR))]
     st.write("✅ Removed outliers based on the IQR method.")
-    
+
     # 6 Normalizing Columns
     st.subheader("Normalizing Columns")
     st.code("""
-
     scaler = MinMaxScaler()
     phoneData_df[['product_price', 'product_star_rating']] = scaler.fit_transform(
     phoneData_df[['product_price', 'product_star_rating']])   
-    
     """)
     scaler = MinMaxScaler()
     phonesearch_df[['product_price', 'product_star_rating']] = scaler.fit_transform(phonesearch_df[['product_price', 'product_star_rating']])
     st.write("✅ Normalized columns `product_price` and `product_star_rating`.")
-    
+
     # Final preview
     st.subheader("Processed Dataset Preview")
     st.write("Here’s a preview of the processed dataset:")
     st.write(phonesearch_df.head())
- 
+
     st.header("🧼 Data Pre-processing")
     # 1 Encoding categorical variables
     st.subheader("Encoding Categorical Variables")
-
-    # Applying Label Encoding
     encoder = LabelEncoder()
     phonesearch_df['is_best_seller_encoded'] = encoder.fit_transform(phonesearch_df['is_best_seller'].astype(str))
     phonesearch_df['is_amazon_choice_encoded'] = encoder.fit_transform(phonesearch_df['is_amazon_choice'].astype(str))
@@ -370,11 +360,11 @@ elif st.session_state.page_selection == "data_cleaning":
     with col2:
         st.write("Target Variable for Classification:")
         st.write(y_classification.head())
-    
+
     # 3 Split the dataset into training and testing sets for classification
     st.subheader("Classification Data Split")
     X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X_classification, y_classification, test_size=0.3, random_state=42)
-    
+
     # Display 
     st.write("Shape of the Training Set for Classification:")
     st.write(X_train_class.shape)
@@ -386,7 +376,7 @@ elif st.session_state.page_selection == "data_cleaning":
     st.session_state['X_test_class'] = X_test_class
     st.session_state['y_train_class'] = y_train_class
     st.session_state['y_test_class'] = y_test_class 
-     
+
     # 4 Select features and target variable for regression
     st.subheader("Regression Task")
     X_regression = phonesearch_df[['product_price', 'product_star_rating', 'product_num_ratings']]
@@ -413,6 +403,10 @@ elif st.session_state.page_selection == "data_cleaning":
     st.session_state['X_test_reg'] = X_test_reg
     st.session_state['y_train_reg'] = y_train_reg
     st.session_state['y_test_reg'] = y_test_reg
+
+    # Add a message indicating that preprocessing is complete
+    st.write("Data Preprocessing Completed and Saved to Session State.")
+
 
 
 
