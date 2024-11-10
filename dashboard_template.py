@@ -414,95 +414,125 @@ elif st.session_state.page_selection == "data_cleaning":
     st.session_state['y_train_reg'] = y_train_reg
     st.session_state['y_test_reg'] = y_test_reg
 
+
+    # Ensure required session state variables are initialized
+    if 'X_train_class' not in st.session_state:
+        st.session_state['X_train_class'] = None
+    if 'X_test_class' not in st.session_state:
+        st.session_state['X_test_class'] = None
+    if 'y_train_class' not in st.session_state:
+        st.session_state['y_train_class'] = None
+    if 'y_test_class' not in st.session_state:
+        st.session_state['y_test_class'] = None
+    if 'X_train_reg' not in st.session_state:
+        st.session_state['X_train_reg'] = None
+    if 'X_test_reg' not in st.session_state:
+        st.session_state['X_test_reg'] = None
+    if 'y_train_reg' not in st.session_state:
+        st.session_state['y_train_reg'] = None
+    if 'y_test_reg' not in st.session_state:
+        st.session_state['y_test_reg'] = None
+
+
 # Machine Learning Page
-elif st.session_state.page_selection == "machine_learning":
+if st.session_state.page_selection == "machine_learning":
     st.header("🤖 Machine Learning")
 
     st.subheader("Logistic Regression")
     st.markdown("""
     **Logistic Regression** is a `statistical` method used for binary classification problems, where the goal is to predict the probability that a given input point belongs to a particular category...
     `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
-    """)    
+    """)
 
-    # Access X and y data from session state
-    X_train_class = st.session_state['X_train_class']
-    X_test_class = st.session_state['X_test_class']
-    y_train_class = st.session_state['y_train_class']
-    y_test_class = st.session_state['y_test_class']
+    # Check if required data is available in session state
+    if None in (st.session_state['X_train_class'], st.session_state['X_test_class'],
+                st.session_state['y_train_class'], st.session_state['y_test_class']):
+        st.error("Please complete data preprocessing before accessing the Machine Learning page.")
+    else:
+        # Access data from session state
+        X_train_class = st.session_state['X_train_class']
+        X_test_class = st.session_state['X_test_class']
+        y_train_class = st.session_state['y_train_class']
+        y_test_class = st.session_state['y_test_class']
 
-    # Handle missing values for classification
-    imputer_class = SimpleImputer(strategy="median")
-    X_train_class = imputer_class.fit_transform(X_train_class)
-    X_test_class = imputer_class.transform(X_test_class)
-    
-    st.write("Classification data imputation complete!")
-       
-    # Train Logistic Regression
-    st.subheader("Training the Logistic Regression model")
-    log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
-    log_reg_model.fit(X_train_class, y_train_class)
+        # Handle missing values for classification
+        imputer_class = SimpleImputer(strategy="median")
+        X_train_class = imputer_class.fit_transform(X_train_class)
+        X_test_class = imputer_class.transform(X_test_class)
+        
+        st.write("Classification data imputation complete!")
+        
+        # Train Logistic Regression
+        st.subheader("Training the Logistic Regression model")
+        log_reg_model = LogisticRegression(random_state=42, max_iter=1000)
+        log_reg_model.fit(X_train_class, y_train_class)
 
-    # Save model to session state for prediction page
-    st.session_state['log_reg_model'] = log_reg_model
+        # Save model to session state for prediction page
+        st.session_state['log_reg_model'] = log_reg_model
 
-    st.subheader("Model Evaluation")
-    y_pred_class = log_reg_model.predict(X_test_class)
-    accuracy_class = accuracy_score(y_test_class, y_pred_class)
+        st.subheader("Model Evaluation")
+        y_pred_class = log_reg_model.predict(X_test_class)
+        accuracy_class = accuracy_score(y_test_class, y_pred_class)
 
-    st.write(f"Accuracy: {accuracy_class * 100:.2f}%")
+        st.write(f"Accuracy: {accuracy_class * 100:.2f}%")
 
-    st.subheader("Classification Report")
-    classification_report_text = classification_report(y_test_class, y_pred_class)
-    st.text(f"\nClassification Report:\n{classification_report_text}")
+        st.subheader("Classification Report")
+        classification_report_text = classification_report(y_test_class, y_pred_class)
+        st.text(f"\nClassification Report:\n{classification_report_text}")
 
-    # Confusion Matrix Visualization
-    plot_confusion_matrix(y_test_class, y_pred_class, title="Logistic Regression Confusion Matrix")
+        # Confusion Matrix Visualization
+        plot_confusion_matrix(y_test_class, y_pred_class, title="Logistic Regression Confusion Matrix")
 
     st.subheader("Random Forest")
     st.markdown("""
     **Random Forest Regressor** is a machine learning algorithm that is used to predict continuous values...
     `Reference:` https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
     """) 
-    
-    # Access X and y data for Random Forest regression
-    X_train_reg = st.session_state['X_train_reg']
-    X_test_reg = st.session_state['X_test_reg']
-    y_train_reg = st.session_state['y_train_reg']
-    y_test_reg = st.session_state['y_test_reg']
 
-    # Handle missing values for regression
-    imputer_reg = SimpleImputer(strategy="median")
-    X_train_reg = imputer_reg.fit_transform(X_train_reg)
-    X_test_reg = imputer_reg.transform(X_test_reg)
-    y_train_reg = pd.Series(y_train_reg).fillna(y_train_reg.median())
-    y_test_reg = pd.Series(y_test_reg).fillna(y_test_reg.median())
+    # Check if regression data is available
+    if None in (st.session_state['X_train_reg'], st.session_state['X_test_reg'],
+                st.session_state['y_train_reg'], st.session_state['y_test_reg']):
+        st.error("Please complete data preprocessing before accessing the Random Forest model.")
+    else:
+        # Access X and y data for Random Forest regression
+        X_train_reg = st.session_state['X_train_reg']
+        X_test_reg = st.session_state['X_test_reg']
+        y_train_reg = st.session_state['y_train_reg']
+        y_test_reg = st.session_state['y_test_reg']
 
-    st.write("Regression data imputation complete!")
+        # Handle missing values for regression
+        imputer_reg = SimpleImputer(strategy="median")
+        X_train_reg = imputer_reg.fit_transform(X_train_reg)
+        X_test_reg = imputer_reg.transform(X_test_reg)
+        y_train_reg = pd.Series(y_train_reg).fillna(y_train_reg.median())
+        y_test_reg = pd.Series(y_test_reg).fillna(y_test_reg.median())
 
-    st.subheader("Training the Random Forest Regressor model")
-    rfr_model = RandomForestRegressor(random_state=42)
-    rfr_model.fit(X_train_reg, y_train_reg)
+        st.write("Regression data imputation complete!")
 
-    # Save model to session state for prediction page
-    st.session_state['rfr_model'] = rfr_model
-    st.session_state['imputer_reg'] = imputer_reg
+        st.subheader("Training the Random Forest Regressor model")
+        rfr_model = RandomForestRegressor(random_state=42)
+        rfr_model.fit(X_train_reg, y_train_reg)
 
-    st.subheader("Model Evaluation")
-    train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)
-    test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)
+        # Save model to session state for prediction page
+        st.session_state['rfr_model'] = rfr_model
+        st.session_state['imputer_reg'] = imputer_reg
 
-    st.write(f'Train R² Score: {train_accuracy_reg * 100:.2f}%')
-    st.write(f'Test R² Score: {test_accuracy_reg * 100:.2f}%')
+        st.subheader("Model Evaluation")
+        train_accuracy_reg = rfr_model.score(X_train_reg, y_train_reg)
+        test_accuracy_reg = rfr_model.score(X_test_reg, y_test_reg)
 
-    # Feature Importance
-    feature_names = ['Product Price', 'Star Rating', 'Number of Ratings']
-    feature_importance = pd.DataFrame({
-        'Feature': feature_names,
-        'Importance': rfr_model.feature_importances_
-    }).sort_values('Importance', ascending=False)
-    
-    st.subheader("Feature Importance")
-    feature_importance_plot(feature_importance, 800, 400, 'rf_importance')
+        st.write(f'Train R² Score: {train_accuracy_reg * 100:.2f}%')
+        st.write(f'Test R² Score: {test_accuracy_reg * 100:.2f}%')
+
+        # Feature Importance
+        feature_names = ['Product Price', 'Star Rating', 'Number of Ratings']
+        feature_importance = pd.DataFrame({
+            'Feature': feature_names,
+            'Importance': rfr_model.feature_importances_
+        }).sort_values('Importance', ascending=False)
+        
+        st.subheader("Feature Importance")
+        feature_importance_plot(feature_importance, 800, 400, 'rf_importance')
 
 # Prediction Page
 elif st.session_state.page_selection == "prediction":
