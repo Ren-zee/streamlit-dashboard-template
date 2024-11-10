@@ -593,7 +593,7 @@ elif st.session_state.page_selection == "prediction":
                     scaler = st.session_state.get('scaler')  # Use scaler from session state
                     if scaler is None:
                         st.error("Scaler is not available. Please train the model first!")
-                        return
+                    return
                     
                     input_normalized = scaler.transform(input_data)
 
